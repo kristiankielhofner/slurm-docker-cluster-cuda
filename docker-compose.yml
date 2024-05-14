@@ -1,5 +1,3 @@
-version: "2.2"
-
 services:
   mysql:
     image: mariadb:10.10
@@ -14,7 +12,7 @@ services:
       - var_lib_mysql:/var/lib/mysql
 
   slurmdbd:
-    image: slurm-docker-cluster:${IMAGE_TAG:-21.08}
+    image: ${IMAGE:-slurm-docker-cluster-cuda}:${IMAGE_TAG:-21.08}
     build:
       context: .
       args:
@@ -32,7 +30,7 @@ services:
       - mysql
 
   slurmctld:
-    image: slurm-docker-cluster:${IMAGE_TAG:-21.08}
+    image: ${IMAGE:-slurm-docker-cluster-cuda}:${IMAGE_TAG:-21.08}
     command: ["slurmctld"]
     container_name: slurmctld
     hostname: slurmctld
@@ -41,13 +39,25 @@ services:
       - etc_slurm:/etc/slurm
       - slurm_jobdir:/data
       - var_log_slurm:/var/log/slurm
+      - ./:/local
+    shm_size: 2gb
+    ipc: host
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
     expose:
       - "6817"
     depends_on:
       - "slurmdbd"
 
   c1:
-    image: slurm-docker-cluster:${IMAGE_TAG:-21.08}
+    image: ${IMAGE:-slurm-docker-cluster-cuda}:${IMAGE_TAG:-21.08}
     command: ["slurmd"]
     hostname: c1
     container_name: c1
@@ -56,13 +66,25 @@ services:
       - etc_slurm:/etc/slurm
       - slurm_jobdir:/data
       - var_log_slurm:/var/log/slurm
+      - ./:/local
+    shm_size: 2gb
+    ipc: host
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
     expose:
       - "6818"
     depends_on:
       - "slurmctld"
 
   c2:
-    image: slurm-docker-cluster:${IMAGE_TAG:-21.08}
+    image: ${IMAGE:-slurm-docker-cluster-cuda}:${IMAGE_TAG:-21.08}
     command: ["slurmd"]
     hostname: c2
     container_name: c2
@@ -71,6 +93,18 @@ services:
       - etc_slurm:/etc/slurm
       - slurm_jobdir:/data
       - var_log_slurm:/var/log/slurm
+      - ./:/local
+    shm_size: 2gb
+    ipc: host
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
     expose:
       - "6818"
     depends_on:

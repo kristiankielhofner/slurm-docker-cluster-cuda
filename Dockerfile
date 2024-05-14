@@ -1,4 +1,7 @@
-FROM rockylinux:8
+ARG CUDA_VER=12.4.1
+ARG ROCKY_VER=8
+
+FROM nvidia/cuda:${CUDA_VER}-cudnn-devel-rockylinux${ROCKY_VER}
 
 LABEL org.opencontainers.image.source="https://github.com/giovtorres/slurm-docker-cluster" \
       org.opencontainers.image.title="slurm-docker-cluster" \
@@ -7,7 +10,8 @@ LABEL org.opencontainers.image.source="https://github.com/giovtorres/slurm-docke
       maintainer="Giovanni Torres"
 
 ARG SLURM_TAG=slurm-21-08-6-1
-ARG GOSU_VERSION=1.11
+ARG GOSU_VERSION=1.17
+ARG MINICONDA_VER=23.11.0-0 # Version on Frontier as of 5/14/2024
 
 RUN set -ex \
     && yum makecache \
@@ -85,14 +89,22 @@ RUN set -x \
     && chown -R slurm:slurm /var/*/slurm* \
     && /sbin/create-munge-key
 
+RUN wget -O Miniforge3.sh \
+    https://github.com/conda-forge/miniforge/releases/download/${MINICONDA_VER}/Miniforge3-${MINICONDA_VER}-Linux-x86_64.sh && \
+    bash Miniforge3.sh -b -p "/app/conda" && rm Miniforge3.sh
+
 COPY slurm.conf /etc/slurm/slurm.conf
 COPY slurmdbd.conf /etc/slurm/slurmdbd.conf
+COPY gres.conf /etc/slurm/gres.conf
+
 RUN set -x \
     && chown slurm:slurm /etc/slurm/slurmdbd.conf \
     && chmod 600 /etc/slurm/slurmdbd.conf
 
-
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+
+# Put us somewhere other than /
+WORKDIR /local
 
 CMD ["slurmdbd"]

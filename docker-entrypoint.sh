@@ -21,6 +21,11 @@ then
     exec gosu slurm /usr/sbin/slurmdbd -Dvvv
 fi
 
+# We should have Nvidia GPU access at this point
+# With set -e we want to exit if this command "fails" anyway
+echo "---> nvidia-smi"
+nvidia-smi
+
 if [ "$1" = "slurmctld" ]
 then
     echo "---> Starting the MUNGE Authentication service (munged) ..."
