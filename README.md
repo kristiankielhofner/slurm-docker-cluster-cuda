@@ -1,10 +1,14 @@
 # Slurm Docker Cluster with CUDA
 
-This is a multi-container Slurm cluster using docker compose.  The compose file
+This is a multi-container Slurm cluster using `docker compose`.  The compose file
 creates named volumes for persistent storage of MariaDB data files as well as
 Slurm state and log directories.
 
 It has been extended to support CUDA on Nvidia devices. By default all available local Nvidia GPUs are exposed to the control and compute containers.
+
+It attempts to follow the environment you will find on [OLCF Frontier](https://docs.olcf.ornl.gov/systems/frontier_user_guide.html). The main goal of this project is to ease the transition of workloads to Frontier for users more familiar with CUDA and less familiar with Slurm, AMD, ROCm, and Frontier overall.
+
+By default the current recommended Frontier miniforge environment is pre-installed for ease of use with python-based user projects.
 
 ## Containers and Volumes
 
