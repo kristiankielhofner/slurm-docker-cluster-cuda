@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# Figure out where we really are
+OUR_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd "$OUR_DIR"
+
 #SLURM_TAG=${SLURM_TAG:-slurm-23-02-7-1} #Frontier ver - WIP
 SLURM_TAG=${SLURM_TAG:-slurm-21-08-6-1}
 
