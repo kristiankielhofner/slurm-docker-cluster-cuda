@@ -49,6 +49,12 @@ c2)
     docker exec -it c2 bash
 ;;
 
+# You should never need this, just in case...
+register)
+    docker exec slurmctld bash -c "/usr/bin/sacctmgr --immediate add cluster name=linux" && \
+    docker compose restart slurmdbd slurmctld
+;;
+
 # Shell in a fresh base image
 shell)
     docker run --rm -it --entrypoint /bin/bash ${IMAGE}:${IMAGE_TAG}
