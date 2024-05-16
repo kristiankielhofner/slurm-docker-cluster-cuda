@@ -17,7 +17,7 @@ set -a
 case $1 in
 
 build)
-    docker build --build-arg SLURM_TAG=${SLURM_TAG} -t ${IMAGE}:${IMAGE_TAG} .
+    docker build --progress=plain --build-arg SLURM_TAG=${SLURM_TAG} -t ${IMAGE}:${IMAGE_TAG} .
 ;;
 
 clean)
@@ -27,7 +27,11 @@ clean)
         slurm-docker-cluster-cuda_var_lib_mysql slurm-docker-cluster-cuda_var_log_slurm
 ;;
 
-up)
+down)
+    docker compose down
+;;
+
+run|up)
     docker compose up
 ;;
 
@@ -61,7 +65,13 @@ register)
 
 # Shell in a fresh base image
 shell)
-    docker run --rm -it --entrypoint /bin/bash ${IMAGE}:${IMAGE_TAG}
+    docker run --gpus=all --rm -it -v ${PWD}:/local --entrypoint /bin/bash ${IMAGE}:${IMAGE_TAG}
+;;
+
+*)
+    echo "Passing to docker compose"...
+    shift
+    docker compose "$@"
 ;;
 
 esac
