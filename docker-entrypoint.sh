@@ -22,7 +22,7 @@ then
 fi
 
 # We should have Nvidia GPU access at this point
-# With set -e we want to exit if this command "fails" anyway
+# With set -e we want to exit if this command "fails" anyway (check this)
 echo "---> nvidia-smi"
 nvidia-smi
 
