@@ -1,24 +1,24 @@
 ARG CUDA_VER=12.4.1
-ARG ROCKY_VER=8
+ARG ROCKY_VER=9
 
 FROM nvidia/cuda:${CUDA_VER}-cudnn-devel-rockylinux${ROCKY_VER}
 
-LABEL org.opencontainers.image.source="https://github.com/giovtorres/slurm-docker-cluster" \
-      org.opencontainers.image.title="slurm-docker-cluster" \
-      org.opencontainers.image.description="Slurm Docker cluster on Rocky Linux 8" \
-      org.label-schema.docker.cmd="docker-compose up -d" \
-      maintainer="Giovanni Torres"
+LABEL org.opencontainers.image.source="https://github.com/kristiankielhofner/slurm-docker-cluster-cuda" \
+      org.opencontainers.image.title="slurm-docker-cluster-cuda" \
+      org.opencontainers.image.description="Slurm Docker cluster with CUDA on Rocky Linux 9" \
+      org.label-schema.docker.cmd="docker compose up -d" \
+      maintainer="Kristian Kielhofner"
 
 ARG SLURM_TAG=slurm-21-08-6-1
 ARG GOSU_VERSION=1.17
 ARG MINICONDA_VER=23.11.0-0 # Version on Frontier as of 5/14/2024
 
-RUN set -ex \
-    && yum makecache \
-    && yum -y update \
-    && yum -y install dnf-plugins-core \
-    && yum config-manager --set-enabled powertools \
-    && yum -y install \
+RUN --mount=type=cache,target=/var/cache/dnf dnf makecache \
+    && dnf -y update \
+    && dnf -y install dnf-plugins-core \
+    && dnf install -y 'dnf-command(config-manager)' \
+    && dnf config-manager --set-enabled devel \
+    && dnf -y install \
        wget \
        bzip2 \
        perl \
@@ -39,15 +39,11 @@ RUN set -ex \
        vim-enhanced \
        http-parser-devel \
        json-c-devel \
-    && yum clean all \
-    && rm -rf /var/cache/yum
-
-RUN alternatives --set python /usr/bin/python3
+       && dnf clean all
 
 RUN pip3 install Cython nose
 
-RUN set -ex \
-    && wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-amd64" \
+RUN wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-amd64" \
     && wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-amd64.asc" \
     && export GNUPGHOME="$(mktemp -d)" \
     && gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
@@ -56,11 +52,10 @@ RUN set -ex \
     && chmod +x /usr/local/bin/gosu \
     && gosu nobody true
 
-RUN set -x \
-    && git clone -b ${SLURM_TAG} --single-branch --depth=1 https://github.com/SchedMD/slurm.git \
+RUN git clone -b ${SLURM_TAG} --single-branch --depth=1 https://github.com/SchedMD/slurm.git \
     && pushd slurm \
     && ./configure --enable-debug --prefix=/usr --sysconfdir=/etc/slurm \
-        --with-mysql_config=/usr/bin  --libdir=/usr/lib64 \
+        --with-mysql_config=/usr/bin --libdir=/usr/lib64 --with-nvml=/usr/local/cuda \
     && make install \
     && install -D -m644 etc/cgroup.conf.example /etc/slurm/cgroup.conf.example \
     && install -D -m644 etc/slurm.conf.example /etc/slurm/slurm.conf.example \
@@ -96,9 +91,9 @@ RUN wget -O Miniforge3.sh \
 COPY slurm.conf /etc/slurm/slurm.conf
 COPY slurmdbd.conf /etc/slurm/slurmdbd.conf
 COPY gres.conf /etc/slurm/gres.conf
+#COPY cgroup.conf /etc/slurm/cgroup.conf
 
-RUN set -x \
-    && chown slurm:slurm /etc/slurm/slurmdbd.conf \
+RUN chown slurm:slurm /etc/slurm/slurmdbd.conf \
     && chmod 600 /etc/slurm/slurmdbd.conf
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
