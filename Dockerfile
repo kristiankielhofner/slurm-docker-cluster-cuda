@@ -88,6 +88,8 @@ RUN wget -O Miniforge3.sh \
     https://github.com/conda-forge/miniforge/releases/download/${MINICONDA_VER}/Miniforge3-${MINICONDA_VER}-Linux-x86_64.sh && \
     bash Miniforge3.sh -b -p "/app/conda" && rm Miniforge3.sh
 
+RUN cp /app/conda/etc/profile.d/conda.sh /etc/profile.d
+
 COPY slurm.conf /etc/slurm/slurm.conf
 COPY slurmdbd.conf /etc/slurm/slurmdbd.conf
 COPY gres.conf /etc/slurm/gres.conf
