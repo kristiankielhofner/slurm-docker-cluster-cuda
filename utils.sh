@@ -100,7 +100,7 @@ d)
 ;;
 
 # Cancel job
-c)
+k)
     shift
     scancel "$@"
 ;;
