@@ -5,6 +5,12 @@ set -e
 OUR_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "$OUR_DIR"
 
+# Used during docker build
+CUDA_VER=${CUDA_VER:-12.1.0}
+
+CONDA_PATH=${CONDA_PATH:-/local/mgpu/conda}
+PYTHON_VER=${PYTHON_VER:-3.10}
+
 #SLURM_TAG=${SLURM_TAG:-slurm-23-02-7-1} #Frontier ver - WIP
 SLURM_TAG=${SLURM_TAG:-slurm-21-08-6-1}
 
@@ -17,7 +23,13 @@ set -a
 case $1 in
 
 build)
-    docker build --progress=plain --build-arg SLURM_TAG=${SLURM_TAG} -t ${IMAGE}:${IMAGE_TAG} .
+    docker build --progress=plain --build-arg SLURM_TAG=${SLURM_TAG} --build-arg CUDA_VER=${CUDA_VER} \
+        -t ${IMAGE}:${IMAGE_TAG} .
+;;
+
+conda-mgpu)
+    rm -rf ${CONDA_PATH}
+    conda create -y -p ${CONDA_PATH} python=${PYTHON_VER}
 ;;
 
 clean)
@@ -42,19 +54,14 @@ ctl)
 
 # Just run something on the "cluster"
 # In this configuration jobs need to be submitted via the control node/container
-r)
+dr)
     shift
     docker exec -it slurmctld srun "$@"
 ;;
 
-# Shell on c1 AKA c
-c|c1)
-    docker exec -it c1 bash
-;;
-
-# Shell on c2
-c2)
-    docker exec -it c2 bash
+# Shell on compute nodes
+c*)
+    docker exec -it $1 bash
 ;;
 
 # You should never need this, just in case...
@@ -66,6 +73,36 @@ register)
 # Shell in a fresh base image
 shell)
     docker run --gpus=all --rm -it -v ${PWD}:/local --entrypoint /bin/bash ${IMAGE}:${IMAGE_TAG}
+;;
+
+info)
+    echo "Hostname is $HOSTNAME"
+    echo "Nvidia info"
+    nvidia-smi
+;;
+
+# Job helpers
+# Submit job
+r)
+    shift
+    sbatch --export=NONE "$@"
+;;
+
+# List jobs
+l)
+    squeue
+;;
+
+# Debug job
+d)
+    shift
+    scontrol show jobid -dd "$@"
+;;
+
+# Cancel job
+c)
+    shift
+    scancel "$@"
 ;;
 
 *)

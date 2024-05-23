@@ -40,6 +40,9 @@ services:
       - slurm_jobdir:/data
       - var_log_slurm:/var/log/slurm
       - ./:/local
+      - ./cache:/root/.cache
+    env_file:
+      - .env
     shm_size: 2gb
     ipc: host
     ulimits:
@@ -67,6 +70,9 @@ services:
       - slurm_jobdir:/data
       - var_log_slurm:/var/log/slurm
       - ./:/local
+      - ./cache:/root/.cache
+    env_file:
+      - .env
     shm_size: 2gb
     ipc: host
     ulimits:
@@ -94,6 +100,69 @@ services:
       - slurm_jobdir:/data
       - var_log_slurm:/var/log/slurm
       - ./:/local
+      - ./cache:/root/.cache
+    env_file:
+      - .env
+    shm_size: 2gb
+    ipc: host
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+    expose:
+      - "6818"
+    depends_on:
+      - "slurmctld"
+
+  c3:
+    image: ${IMAGE:-slurm-docker-cluster-cuda}:${IMAGE_TAG:-21.08}
+    command: ["slurmd"]
+    hostname: c3
+    container_name: c3
+    volumes:
+      - etc_munge:/etc/munge
+      - etc_slurm:/etc/slurm
+      - slurm_jobdir:/data
+      - var_log_slurm:/var/log/slurm
+      - ./:/local
+      - ./cache:/root/.cache
+    env_file:
+      - .env
+    shm_size: 2gb
+    ipc: host
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+    expose:
+      - "6818"
+    depends_on:
+      - "slurmctld"
+
+  c4:
+    image: ${IMAGE:-slurm-docker-cluster-cuda}:${IMAGE_TAG:-21.08}
+    command: ["slurmd"]
+    hostname: c4
+    container_name: c4
+    volumes:
+      - etc_munge:/etc/munge
+      - etc_slurm:/etc/slurm
+      - slurm_jobdir:/data
+      - var_log_slurm:/var/log/slurm
+      - ./:/local
+      - ./cache:/root/.cache
+    env_file:
+      - .env
     shm_size: 2gb
     ipc: host
     ulimits:
