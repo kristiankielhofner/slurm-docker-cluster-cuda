@@ -1,7 +1,7 @@
-ARG CUDA_VER=12.4.1
+ARG CUDA_VER=12.1.0
 ARG ROCKY_VER=9
 
-FROM nvidia/cuda:${CUDA_VER}-cudnn-devel-rockylinux${ROCKY_VER}
+FROM nvidia/cuda:${CUDA_VER}-cudnn8-devel-rockylinux${ROCKY_VER}
 
 LABEL org.opencontainers.image.source="https://github.com/kristiankielhofner/slurm-docker-cluster-cuda" \
       org.opencontainers.image.title="slurm-docker-cluster-cuda" \
@@ -15,30 +15,33 @@ ARG MINICONDA_VER=23.11.0-0 # Version on Frontier as of 5/14/2024
 
 RUN --mount=type=cache,target=/var/cache/dnf dnf makecache \
     && dnf -y update \
-    && dnf -y install dnf-plugins-core \
+    && dnf -y install dnf-plugins-core epel-release \
     && dnf install -y 'dnf-command(config-manager)' \
     && dnf config-manager --set-enabled devel \
     && dnf -y install \
-       wget \
-       bzip2 \
-       perl \
-       gcc \
-       gcc-c++\
-       git \
-       gnupg \
-       make \
-       munge \
-       munge-devel \
-       python3-devel \
-       python3-pip \
-       python3 \
-       mariadb-server \
-       mariadb-devel \
-       psmisc \
-       bash-completion \
-       vim-enhanced \
-       http-parser-devel \
-       json-c-devel \
+        wget \
+        bzip2 \
+        perl \
+        gcc \
+        gcc-c++\
+        git \
+        gnupg \
+        make \
+        munge \
+        munge-devel \
+        python3-devel \
+        python3-pip \
+        python3 \
+        mariadb-server \
+        mariadb-devel \
+        psmisc \
+        bash-completion \
+        vim-enhanced \
+        http-parser-devel \
+        json-c-devel \
+        libaio-devel \
+        procps-ng \
+        htop \
        && dnf clean all
 
 RUN pip3 install Cython nose
