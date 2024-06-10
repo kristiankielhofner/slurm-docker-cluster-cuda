@@ -7,8 +7,6 @@ cd "$OUR_DIR"
 
 # Used during docker build
 CUDA_VER=${CUDA_VER:-12.1.0}
-
-# Used during docker build
 ROCM_VER=${ROCM_VER:-5.7.1}
 
 CONDA_PATH=${CONDA_PATH:-/local/mgpu/conda}
@@ -20,6 +18,36 @@ SLURM_TAG=${SLURM_TAG:-slurm-21-08-6-1}
 IMAGE=${IMAGE:-slurm-docker-cluster-gpu}
 IMAGE_TAG=${IMAGE_TAG:-21.08}
 
+detect_hw() {
+    # Default to no GPU (cpu)
+    GPU="cpu"
+
+    if [ -c /dev/kfd ]; then
+        echo "Detected AMD GPU"
+        GPU="rocm"
+    fi
+
+    if [ -c /dev/nvidia0 ]; then
+        echo "Detected Nvidia GPU"
+        GPU="cuda"
+    fi
+}
+
+get_hw_info_cmd() {
+    GPU_INFO="echo No GPU Found"
+
+    if [ -x /usr/bin/nvidia-smi ]; then
+        GPU_INFO="/usr/bin/nvidia-smi"
+    fi
+
+    if [ -x /usr/bin/rocm-smi ]; then
+        GPU_INFO="/usr/bin/rocm-smi"
+    fi
+}
+
+detect_hw
+get_hw_info_cmd
+
 # Export all just in case
 set -a
 
@@ -27,7 +55,9 @@ case $1 in
 
 build)
     docker build --progress=plain --build-arg SLURM_TAG=${SLURM_TAG} --build-arg CUDA_VER=${CUDA_VER} \
-        -t ${IMAGE}:${IMAGE_TAG} .
+        --build-arg ROCM_VER=${ROCM_VER} --build-arg GPU=${GPU} \
+        -f Dockerfile.${GPU} -t ${IMAGE}:${IMAGE_TAG} .
+
 ;;
 
 conda-mgpu)
@@ -36,18 +66,20 @@ conda-mgpu)
 ;;
 
 clean)
-    docker compose stop
-    docker compose rm -f
+    docker compose -f docker-compose-${GPU}.yml down
+    docker compose -f docker-compose-${GPU}.yml rm -f
     docker volume rm slurm-docker-cluster-gpu_etc_munge slurm-docker-cluster-gpu_etc_slurm  \
         slurm-docker-cluster-gpu_var_lib_mysql slurm-docker-cluster-gpu_var_log_slurm
 ;;
 
 down)
-    docker compose down
+    docker compose -f docker-compose-${GPU}.yml down
 ;;
 
 run|up)
-    docker compose up
+    # Make sure we have .env
+    touch .env
+    docker compose -f docker-compose-${GPU}.yml up
 ;;
 
 # Shell on control node
@@ -80,8 +112,8 @@ shell)
 
 info)
     echo "Hostname is $HOSTNAME"
-    echo "Nvidia info"
-    nvidia-smi
+    echo "GPU info:"
+    ${GPU_INFO}
 ;;
 
 # Job helpers
@@ -111,7 +143,7 @@ k)
 *)
     echo "Passing to docker compose"...
     shift
-    docker compose "$@"
+    docker compose -f docker-compose-${GPU}.yml "$@"
 ;;
 
 esac

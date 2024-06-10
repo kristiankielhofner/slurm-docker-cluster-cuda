@@ -21,10 +21,17 @@ then
     exec gosu slurm /usr/sbin/slurmdbd -Dvvv
 fi
 
-# We should have Nvidia GPU access at this point
+# We should have GPU access at this point
 # With set -e we want to exit if this command "fails" anyway (check this)
-echo "---> nvidia-smi"
-nvidia-smi
+if [ -x /usr/bin/nvidia-smi ]; then
+    echo "---> nvidia-smi"
+    nvidia-smi
+fi
+
+if [ -x /opt/rocm-${ROCM_VER}/bin/rocm-smi ]; then
+    echo "---> rocm-smi"
+    rocm-smi
+fi
 
 if [ "$1" = "slurmctld" ]
 then

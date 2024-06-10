@@ -1,17 +1,21 @@
-ARG CUDA_VER=12.1.0
+ARG ROCM_VER=5.7.1
 ARG ROCKY_VER=9
+ARG GPU=rocm
 
-FROM nvidia/cuda:${CUDA_VER}-cudnn8-devel-rockylinux${ROCKY_VER}
+FROM rockylinux:${ROCKY_VER}
 
 LABEL org.opencontainers.image.source="https://github.com/kristiankielhofner/slurm-docker-cluster-gpu" \
       org.opencontainers.image.title="slurm-docker-cluster-gpu" \
-      org.opencontainers.image.description="Slurm Docker cluster with CUDA on Rocky Linux 9" \
+      org.opencontainers.image.description="Slurm Docker cluster with ROCm on Rocky Linux 9" \
       org.label-schema.docker.cmd="docker compose up -d" \
       maintainer="Kristian Kielhofner"
 
 ARG SLURM_TAG=slurm-21-08-6-1
 ARG GOSU_VERSION=1.17
 ARG MINICONDA_VER=23.11.0-0 # Version on Frontier as of 5/14/2024
+ARG GPU
+ARG ROCKY_VER
+ARG ROCM_VER
 
 RUN --mount=type=cache,target=/var/cache/dnf dnf makecache \
     && dnf -y update \
@@ -41,8 +45,31 @@ RUN --mount=type=cache,target=/var/cache/dnf dnf makecache \
         json-c-devel \
         libaio-devel \
         procps-ng \
-        htop \
-       && dnf clean all
+        htop
+
+# Add ROCm repo
+RUN echo "[ROCm-${ROCM_VER}]" > /etc/yum.repos.d/rocm.repo
+RUN echo "name=ROCm${ROCM_VER}" >> /etc/yum.repos.d/rocm.repo
+RUN echo "baseurl=https://repo.radeon.com/rocm/rhel${ROCKY_VER}/${ROCM_VER}/main" >> /etc/yum.repos.d/rocm.repo
+RUN echo "enabled=1" >> /etc/yum.repos.d/rocm.repo
+RUN echo "priority=50" >> /etc/yum.repos.d/rocm.repo
+RUN echo "gpgcheck=1" >> /etc/yum.repos.d/rocm.repo
+RUN echo "gpgkey=https://repo.radeon.com/rocm/rocm.gpg.key" >> /etc/yum.repos.d/rocm.repo
+
+RUN dnf clean all
+
+RUN dnf -y install rocm-utils rocm-smi rocm-smi-lib && dnf clean all
+
+RUN echo "/opt/rocm/lib" > /etc/ld.so.conf.d/rocm.conf
+RUN echo "/opt/rocm/lib64" >> /etc/ld.so.conf.d/rocm.conf
+
+RUN ldconfig
+
+# Set in environment
+ENV ROCM_VER=${ROCM_VER}
+
+# Add path
+COPY misc/rocm.sh /etc/profile.d/99-rocm.sh
 
 RUN pip3 install Cython nose
 
@@ -58,7 +85,7 @@ RUN wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/downloa
 RUN git clone -b ${SLURM_TAG} --single-branch --depth=1 https://github.com/SchedMD/slurm.git \
     && pushd slurm \
     && ./configure --enable-debug --prefix=/usr --sysconfdir=/etc/slurm \
-        --with-mysql_config=/usr/bin --libdir=/usr/lib64 --with-nvml=/usr/local/cuda \
+        --with-mysql_config=/usr/bin --libdir=/usr/lib64 \
     && make install \
     && install -D -m644 etc/cgroup.conf.example /etc/slurm/cgroup.conf.example \
     && install -D -m644 etc/slurm.conf.example /etc/slurm/slurm.conf.example \
@@ -95,7 +122,7 @@ RUN cp /app/conda/etc/profile.d/conda.sh /etc/profile.d
 
 COPY slurm.conf /etc/slurm/slurm.conf
 COPY slurmdbd.conf /etc/slurm/slurmdbd.conf
-COPY gres.conf /etc/slurm/gres.conf
+COPY gres-${GPU}.conf /etc/slurm/gres.conf
 #COPY cgroup.conf /etc/slurm/cgroup.conf
 
 RUN chown slurm:slurm /etc/slurm/slurmdbd.conf \
