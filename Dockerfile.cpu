@@ -1,7 +1,7 @@
 ARG ROCKY_VER=9
 ARG GPU=cpu
 
-FROM rockylinux:${ROCKY_VER}-minimal
+FROM rockylinux:${ROCKY_VER}
 
 LABEL org.opencontainers.image.source="https://github.com/kristiankielhofner/slurm-docker-cluster-gpu" \
       org.opencontainers.image.title="slurm-docker-cluster-gpu" \
@@ -59,7 +59,7 @@ RUN wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/downloa
 RUN git clone -b ${SLURM_TAG} --single-branch --depth=1 https://github.com/SchedMD/slurm.git \
     && pushd slurm \
     && ./configure --enable-debug --prefix=/usr --sysconfdir=/etc/slurm \
-        --with-mysql_config=/usr/bin --libdir=/usr/lib64 --with-nvml=/usr/local/cuda \
+        --with-mysql_config=/usr/bin --libdir=/usr/lib64 \
     && make install \
     && install -D -m644 etc/cgroup.conf.example /etc/slurm/cgroup.conf.example \
     && install -D -m644 etc/slurm.conf.example /etc/slurm/slurm.conf.example \
