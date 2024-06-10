@@ -3,8 +3,8 @@ ARG ROCKY_VER=9
 
 FROM nvidia/cuda:${CUDA_VER}-cudnn8-devel-rockylinux${ROCKY_VER}
 
-LABEL org.opencontainers.image.source="https://github.com/kristiankielhofner/slurm-docker-cluster-cuda" \
-      org.opencontainers.image.title="slurm-docker-cluster-cuda" \
+LABEL org.opencontainers.image.source="https://github.com/kristiankielhofner/slurm-docker-cluster-gpu" \
+      org.opencontainers.image.title="slurm-docker-cluster-gpu" \
       org.opencontainers.image.description="Slurm Docker cluster with CUDA on Rocky Linux 9" \
       org.label-schema.docker.cmd="docker compose up -d" \
       maintainer="Kristian Kielhofner"

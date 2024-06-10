@@ -8,13 +8,16 @@ cd "$OUR_DIR"
 # Used during docker build
 CUDA_VER=${CUDA_VER:-12.1.0}
 
+# Used during docker build
+ROCM_VER=${ROCM_VER:-5.7.1}
+
 CONDA_PATH=${CONDA_PATH:-/local/mgpu/conda}
 PYTHON_VER=${PYTHON_VER:-3.10}
 
 #SLURM_TAG=${SLURM_TAG:-slurm-23-02-7-1} #Frontier ver - WIP
 SLURM_TAG=${SLURM_TAG:-slurm-21-08-6-1}
 
-IMAGE=${IMAGE:-slurm-docker-cluster-cuda}
+IMAGE=${IMAGE:-slurm-docker-cluster-gpu}
 IMAGE_TAG=${IMAGE_TAG:-21.08}
 
 # Export all just in case
@@ -35,8 +38,8 @@ conda-mgpu)
 clean)
     docker compose stop
     docker compose rm -f
-    docker volume rm slurm-docker-cluster-cuda_etc_munge slurm-docker-cluster-cuda_etc_slurm  \
-        slurm-docker-cluster-cuda_var_lib_mysql slurm-docker-cluster-cuda_var_log_slurm
+    docker volume rm slurm-docker-cluster-gpu_etc_munge slurm-docker-cluster-gpu_etc_slurm  \
+        slurm-docker-cluster-gpu_var_lib_mysql slurm-docker-cluster-gpu_var_log_slurm
 ;;
 
 down)
