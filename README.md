@@ -6,7 +6,7 @@ It has been extended to support CUDA/ROCm on Nvidia/AMD devices. By default all 
 
 It will automatically detect CUDA/ROCm/CPU-only, number of GPUs (if any), and configure itself accordingly.
 
-It attempts to approximate the environment you will find on [OLCF Frontier](https://docs.olcf.ornl.gov/systems/frontier_user_guide.html). The main goal of this project is to ease the transition of workloads to Frontier for users familiar with CUDA/ROCm and less familiar with Slurm and Frontier overall. This can be very useful for developing/debugging Slurm workloads utilizing multiple compute nodes on a single system with as few as one GPUs and the simplicity of `docker compose`.
+It attempts to approximate the environment you will find on [OLCF Frontier](https://docs.olcf.ornl.gov/systems/frontier_user_guide.html). The main goal of this project is to ease the transition of workloads to Frontier for users familiar with CUDA/ROCm and less familiar with Slurm and Frontier overall. This can be very useful for developing/debugging Slurm workloads utilizing multiple compute nodes on a single system with as few as one GPU and the simplicity of `docker compose`.
 
 While Frontier has AMD GPUs this project enables you to experiment/test/dev with Nvidia/CUDA and then move your project(s) to Frontier/ROCm. Of course if you have AMD GPUs on your host system you will emulate Frontier more accurately.
 
@@ -51,7 +51,16 @@ CUDA_VER=12.4.1 ./utils.sh build
 ROCM_VER=6.1.2 ./utils.sh build
 ```
 
-This only needs to be run at build time.
+This only needs to be set at build time. To make it consistent for future builds, etc you can add it to `.env`.
+
+> NOTE: ROCm has fairly limited official GPU support. If you would like to try to use an unsupported GPU you can force "support" by adding the appropriate environment variable to `.env`:
+
+```console
+cat .env
+HSA_OVERRIDE_GFX_VERSION=11.0.0
+```
+
+This will set this (and any other environment variables present) in the appropriate docker containers. Tested with RX 7800 XT but of course your mileage may very.
 
 ## Starting the Cluster
 
