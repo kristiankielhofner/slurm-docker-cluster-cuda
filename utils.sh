@@ -23,12 +23,10 @@ detect_hw() {
     GPU="cpu"
 
     if [ -c /dev/kfd ]; then
-        echo "Detected AMD GPU"
         GPU="rocm"
     fi
 
     if [ -c /dev/nvidia0 ]; then
-        echo "Detected Nvidia GPU"
         GPU="cuda"
     fi
 }
@@ -45,8 +43,41 @@ get_hw_info_cmd() {
     fi
 }
 
+get_num_gpus() {
+    # Assume 0
+    GPU_COUNT=0
+
+    if [ "$GPU" = "cuda" ]; then
+        GPU_COUNT=$(nvidia-smi --query-gpu=name --format=csv | grep -v name | wc -l)
+        echo "Detected $GPU_COUNT Nvidia GPU(s)"
+    fi
+
+    if [ "$GPU" = "rocm" ]; then
+        GPU_COUNT=$(rocm-smi -a --csv | grep card | wc -l)
+        echo "Detected $GPU_COUNT AMD GPU(s)"
+    fi
+}
+
+gen_config() {
+    cp *.conf configs/
+    if [ $GPU_COUNT = 0 ]; then
+        echo "NodeName=c[1-2] RealMemory=48164 CPUs=32 Sockets=1 CoresPerSocket=16 ThreadsPerCore=2 State=UNKNOWN" >> configs/slurm.conf
+    else
+        if [ "$GPU" = "rocm" ]; then
+            echo "AutoDetect=rsmi" > configs/gres.conf
+        fi
+        # TODO: Test on Nvidia
+        if [ "$GPU" = "cuda" ]; then
+            echo 'Name=gpu File=/dev/nvidia*' > configs/gres.conf
+        fi
+    echo "GresTypes=gpu" >> configs/slurm.conf
+    echo "NodeName=c[1-2] RealMemory=48164 CPUs=32 Sockets=1 CoresPerSocket=16 ThreadsPerCore=2 Gres=gpu:${GPU_COUNT} State=UNKNOWN" >> configs/slurm.conf
+    fi
+}
+
 detect_hw
 get_hw_info_cmd
+get_num_gpus
 
 # Export all just in case
 set -a
@@ -54,6 +85,7 @@ set -a
 case $1 in
 
 build)
+    gen_config
     docker build --progress=plain --build-arg SLURM_TAG=${SLURM_TAG} --build-arg CUDA_VER=${CUDA_VER} \
         --build-arg ROCM_VER=${ROCM_VER} --build-arg GPU=${GPU} \
         -f Dockerfile.${GPU} -t ${IMAGE}:${IMAGE_TAG} .
@@ -66,10 +98,15 @@ conda-mgpu)
 ;;
 
 clean)
+    rm -f configs/*
     docker compose -f docker-compose-${GPU}.yml down
     docker compose -f docker-compose-${GPU}.yml rm -f
     docker volume rm slurm-docker-cluster-gpu_etc_munge slurm-docker-cluster-gpu_etc_slurm  \
         slurm-docker-cluster-gpu_var_lib_mysql slurm-docker-cluster-gpu_var_log_slurm
+;;
+
+config)
+    gen_config
 ;;
 
 down)

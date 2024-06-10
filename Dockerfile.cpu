@@ -94,9 +94,8 @@ RUN wget -O Miniforge3.sh \
 
 RUN cp /app/conda/etc/profile.d/conda.sh /etc/profile.d
 
-COPY slurm.conf /etc/slurm/slurm.conf
-COPY slurmdbd.conf /etc/slurm/slurmdbd.conf
-COPY gres-${GPU}.conf /etc/slurm/gres.conf
+COPY configs/slurm.conf /etc/slurm/slurm.conf
+COPY configs/slurmdbd.conf /etc/slurm/slurmdbd.conf
 #COPY cgroup.conf /etc/slurm/cgroup.conf
 
 RUN chown slurm:slurm /etc/slurm/slurmdbd.conf \
