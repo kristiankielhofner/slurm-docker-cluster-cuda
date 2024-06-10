@@ -22,15 +22,14 @@ then
 fi
 
 # We should have GPU access at this point
-# With set -e we want to exit if this command "fails" anyway (check this)
 if [ -x /usr/bin/nvidia-smi ]; then
     echo "---> nvidia-smi"
-    nvidia-smi
+    nvidia-smi || true
 fi
 
 if [ -x /opt/rocm-${ROCM_VER}/bin/rocm-smi ]; then
     echo "---> rocm-smi"
-    rocm-smi
+    rocm-smi || true
 fi
 
 if [ "$1" = "slurmctld" ]
