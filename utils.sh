@@ -102,7 +102,9 @@ conda-mgpu)
 ;;
 
 clean)
+    set +e
     rm -f configs/*
+    docker compose -f docker-compose-${GPU}.yml stop
     docker compose -f docker-compose-${GPU}.yml down
     docker compose -f docker-compose-${GPU}.yml rm -f
     docker volume rm slurm-docker-cluster-gpu_etc_munge slurm-docker-cluster-gpu_etc_slurm  \
