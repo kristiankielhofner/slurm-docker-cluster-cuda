@@ -1,12 +1,16 @@
-# Slurm Docker Cluster with CUDA
+# Slurm Docker Cluster with GPU Support
 
 This is a multi-container Slurm cluster using `docker compose`.  The compose file
 creates named volumes for persistent storage of MariaDB data files as well as
 Slurm state and log directories.
 
-It has been extended to support CUDA on Nvidia devices. By default all available local Nvidia GPUs are exposed to the control and compute containers.
+It has been extended to support CUDA/ROCm on Nvidia/AMD devices. By default all available local GPUs are exposed to the control and compute containers.
 
-It attempts to follow the environment you will find on [OLCF Frontier](https://docs.olcf.ornl.gov/systems/frontier_user_guide.html). The main goal of this project is to ease the transition of workloads to Frontier for users more familiar with CUDA and less familiar with Slurm, AMD, ROCm, and Frontier overall.
+It will automatically detect CUDA/ROCm/CPU-only and configure itself accordingly.
+
+It attempts to follow the environment you will find on [OLCF Frontier](https://docs.olcf.ornl.gov/systems/frontier_user_guide.html). The main goal of this project is to ease the transition of workloads to Frontier for users more familiar with CUDA/ROCm and less familiar with Slurm and Frontier overall.
+
+While Frontier has AMD GPUs this project enables you to experiment/test/dev with CUDA and then move your project(s) to Frontier/ROCm.
 
 By default the current recommended Frontier miniforge environment is pre-installed for ease of use with python-based user projects.
 
@@ -38,26 +42,10 @@ Build the image locally:
 ./utils.sh build
 ```
 
-Build a different version of Slurm using Docker build args and the Slurm Git
-tag:
-
-```console
-docker build --build-arg SLURM_TAG="slurm-19-05-2-1" -t slurm-docker-cluster:19.05.2 .
-```
-
-Or equivalently using `docker-compose`:
-
-```console
-SLURM_TAG=slurm-19-05-2-1 IMAGE_TAG=19.05.2 docker-compose build
-```
-
-
 ## Starting the Cluster
 
-Run `docker-compose` to instantiate the cluster:
-
 ```console
-docker compose up -d
+./utils.sh up
 ```
 
 ## Register the Cluster with SlurmDBD
@@ -66,7 +54,7 @@ To register the cluster to the slurmdbd daemon, run the `register_cluster.sh`
 script:
 
 ```console
-./register_cluster.sh
+./utils.sh register
 ```
 
 > Note: You may have to wait a few seconds for the cluster daemons to become
@@ -76,7 +64,15 @@ script:
 > You can check the status of the cluster by viewing the logs: `docker compose
 > logs -f`
 
+## File Locations
+
+Slurm depends on the control and compute nodes having a consistent environment and filesystem layout. The control and compute nodes have the current working directory of this project mounted at `/local`.
+
+It is high recommended you work from `/local`!
+
 ## Accessing the Cluster
+
+Slurm jobs are to be submitted from the control node. The control node has access to all admin functionality and can submit, view, etc jobs.
 
 ```console
 ./utils.sh ctl
@@ -108,8 +104,8 @@ c1
 ## Stopping and Restarting the Cluster
 
 ```console
-docker compose stop
-docker compose start
+./utils.sh stop
+./utils.sh start
 ```
 
 ## Deleting the Cluster
