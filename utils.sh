@@ -69,7 +69,7 @@ gen_config() {
     # This is gross and prone to breakage
     # WIP: Hard-code for now
     #AVAIL_MEM=$(free -m | grep Mem | cut -d" " -f12)
-    AVAIL_MEM=8192
+    AVAIL_MEM=${AVAIL_MEM:-8192}
     if [ $GPU_COUNT = 0 ]; then
         echo "NodeName=c[1-2] RealMemory=${AVAIL_MEM} CPUs=${CPU_COUNT} State=UNKNOWN" >> configs/slurm.conf
     else
