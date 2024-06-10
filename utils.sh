@@ -5,6 +5,11 @@ set -e
 OUR_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "$OUR_DIR"
 
+if [ -r .env ]; then
+    echo "Using .env for configuration"
+    . .env
+fi
+
 # Used during docker build
 CUDA_VER=${CUDA_VER:-12.1.0}
 ROCM_VER=${ROCM_VER:-5.7.1}
@@ -60,8 +65,11 @@ get_num_gpus() {
 
 gen_config() {
     cp *.conf configs/
+    CPU_COUNT=$(nproc)
+    # This is gross and prone to breakage
+    AVAIL_MEM=$(free -m | grep Mem | cut -d" " -f12)
     if [ $GPU_COUNT = 0 ]; then
-        echo "NodeName=c[1-2] RealMemory=48164 CPUs=32 Sockets=1 CoresPerSocket=16 ThreadsPerCore=2 State=UNKNOWN" >> configs/slurm.conf
+        echo "NodeName=c[1-2] RealMemory=${AVAIL_MEM} CPUs=${CPU_COUNT} State=UNKNOWN" >> configs/slurm.conf
     else
         if [ "$GPU" = "rocm" ]; then
             echo "# AMD" > configs/gres.conf
@@ -74,8 +82,8 @@ gen_config() {
                 echo "Name=gpu File=$i" >> configs/gres.conf
             done
         fi
-    echo "GresTypes=gpu" >> configs/slurm.conf
-    echo "NodeName=c[1-2] RealMemory=48164 CPUs=32 Sockets=1 CoresPerSocket=16 ThreadsPerCore=2 Gres=gpu:${GPU_COUNT} State=UNKNOWN" >> configs/slurm.conf
+        echo "GresTypes=gpu" >> configs/slurm.conf
+        echo "NodeName=c[1-2] RealMemory=${AVAIL_MEM} CPUs=${CPU_COUNT} Gres=gpu:${GPU_COUNT} State=UNKNOWN" >> configs/slurm.conf
     fi
 }
 
