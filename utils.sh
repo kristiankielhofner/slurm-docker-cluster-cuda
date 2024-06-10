@@ -64,11 +64,15 @@ gen_config() {
         echo "NodeName=c[1-2] RealMemory=48164 CPUs=32 Sockets=1 CoresPerSocket=16 ThreadsPerCore=2 State=UNKNOWN" >> configs/slurm.conf
     else
         if [ "$GPU" = "rocm" ]; then
-            echo "AutoDetect=rsmi" > configs/gres.conf
+            echo "# AMD" > configs/gres.conf
+            echo "AutoDetect=rsmi" >> configs/gres.conf
         fi
-        # TODO: Test on Nvidia
+        # TODO: Support NVML...
         if [ "$GPU" = "cuda" ]; then
-            echo 'Name=gpu File=/dev/nvidia*' > configs/gres.conf
+            echo "# Nvidia" > configs/gres.conf
+            for i in $(ls /dev/nvidia[0-7]); do
+                echo "Name=gpu File=$i" >> configs/gres.conf
+            done
         fi
     echo "GresTypes=gpu" >> configs/slurm.conf
     echo "NodeName=c[1-2] RealMemory=48164 CPUs=32 Sockets=1 CoresPerSocket=16 ThreadsPerCore=2 Gres=gpu:${GPU_COUNT} State=UNKNOWN" >> configs/slurm.conf
