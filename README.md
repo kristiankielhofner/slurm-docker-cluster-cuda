@@ -83,7 +83,7 @@ From the shell, execute slurm commands, for example:
 ```console
 [root@slurmctld /local]# sinfo
 PARTITION AVAIL  TIMELIMIT  NODES  STATE NODELIST
-normal*      up 5-00:00:00      2   idle c[1-2]
+batch*       up   infinite      2   idle c[1-2]
 ```
 
 ## Submitting Jobs
@@ -100,6 +100,94 @@ slurm-2.out
 [root@slurmctld /local]# cat slurm-2.out
 c1
 ```
+
+## GPU Examples
+
+### CUDA with two GPUs (RTX 4090) on host
+
+```console
+slurm-docker-cluster-gpu$ ./utils.sh ctl
+Detected 2 Nvidia GPU(s)
+[root@slurmctld local]# srun -N2 --gres=gpu:2 nvidia-smi
+Mon Jun 10 14:55:30 2024       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 550.90.07              Driver Version: 550.90.07      CUDA Version: 12.4     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+Mon Jun 10 14:55:30 2024       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 550.90.07              Driver Version: 550.90.07      CUDA Version: 12.4     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 4090        Off |   00000000:41:00.0 Off |                  Off |
+|  0%   36C    P8             37W /  480W |    3170MiB /  24564MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   0  NVIDIA GeForce RTX 4090        Off |   00000000:41:00.0 Off |                  Off |
+|  0%   36C    P8             37W /  480W |    3170MiB /  24564MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   1  NVIDIA GeForce RTX 4090        Off |   00000000:61:00.0  On |                  Off |
+|  0%   33C    P8             43W /  480W |       4MiB /  24564MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|   1  NVIDIA GeForce RTX 4090        Off |   00000000:61:00.0  On |                  Off |
+|  0%   33C    P8             43W /  480W |       4MiB /  24564MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
++-----------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------+
+[root@slurmctld local]#
+```
+
+In this case `nvidia-smi` output is incoherent because it's executed on both nodes simultaneously and they "step" over each other.
+
+### ROCm with one GPU (MI210) on host
+
+```console
+slurm-docker-cluster-gpu$ ./utils.sh ctl
+Detected 1 AMD GPU(s)
+[root@slurmctld local]# srun -N2 --gres=gpu:1 rocm-smi
+
+
+========================= ROCm System Management Interface =========================
+=================================== Concise Info ===================================
+GPU  Temp (DieEdge)  AvgPwr  SCLK    MCLK     Fan  Perf  PwrCap  VRAM%  GPU%  
+0    44.0c           42.0W   800Mhz  1600Mhz  0%   auto  300.0W    0%   0%    
+====================================================================================
+=============================== End of ROCm SMI Log ================================
+
+
+========================= ROCm System Management Interface =========================
+=================================== Concise Info ===================================
+GPU  Temp (DieEdge)  AvgPwr  SCLK    MCLK     Fan  Perf  PwrCap  VRAM%  GPU%  
+0    44.0c           42.0W   800Mhz  1600Mhz  0%   auto  300.0W    0%   0%    
+====================================================================================
+=============================== End of ROCm SMI Log ================================
+[root@slurmctld local]#
+```
+
+You can see from these examples that each compute node (c1-c2) share and have access to available host GPUs.
+
+NOTE: Because the GPUs are shared on compute nodes you will have to adjust batch size, etc for available VRAM.
 
 ## Stopping and Restarting the Cluster
 
