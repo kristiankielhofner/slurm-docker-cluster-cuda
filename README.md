@@ -6,9 +6,9 @@ Slurm state and log directories.
 
 It has been extended to support CUDA/ROCm on Nvidia/AMD devices. By default all available local GPUs are exposed to the control and compute containers.
 
-It will automatically detect CUDA/ROCm/CPU-only and configure itself accordingly.
+It will automatically detect CUDA/ROCm/CPU-only, number of GPUs (if any), and configure itself accordingly.
 
-It attempts to follow the environment you will find on [OLCF Frontier](https://docs.olcf.ornl.gov/systems/frontier_user_guide.html). The main goal of this project is to ease the transition of workloads to Frontier for users more familiar with CUDA/ROCm and less familiar with Slurm and Frontier overall.
+It attempts to follow the environment you will find on [OLCF Frontier](https://docs.olcf.ornl.gov/systems/frontier_user_guide.html). The main goal of this project is to ease the transition of workloads to Frontier for users familiar with CUDA/ROCm and less familiar with Slurm and Frontier overall. This can be very useful for developing/debugging Slurm workloads utilizing multiple compute nodes.
 
 While Frontier has AMD GPUs this project enables you to experiment/test/dev with CUDA and then move your project(s) to Frontier/ROCm.
 
@@ -83,7 +83,8 @@ From the shell, execute slurm commands, for example:
 ```console
 [root@slurmctld /local]# sinfo
 PARTITION AVAIL  TIMELIMIT  NODES  STATE NODELIST
-batch*       up   infinite      2   idle c[1-2]
+batch*       up    2:00:00      2   idle c[1-2]
+batch-dev    up   infinite      2   idle c[1-2]
 ```
 
 ## Submitting Jobs
