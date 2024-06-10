@@ -8,7 +8,7 @@ It has been extended to support CUDA/ROCm on Nvidia/AMD devices. By default all 
 
 It will automatically detect CUDA/ROCm/CPU-only, number of GPUs (if any), and configure itself accordingly.
 
-It attempts to follow the environment you will find on [OLCF Frontier](https://docs.olcf.ornl.gov/systems/frontier_user_guide.html). The main goal of this project is to ease the transition of workloads to Frontier for users familiar with CUDA/ROCm and less familiar with Slurm and Frontier overall. This can be very useful for developing/debugging Slurm workloads utilizing multiple compute nodes.
+It attempts to follow the environment you will find on [OLCF Frontier](https://docs.olcf.ornl.gov/systems/frontier_user_guide.html). The main goal of this project is to ease the transition of workloads to Frontier for users familiar with CUDA/ROCm and less familiar with Slurm and Frontier overall. This can be very useful for developing/debugging Slurm workloads utilizing multiple compute nodes on a single system with as few as one GPUs and the simplicity of `docker compose`.
 
 While Frontier has AMD GPUs this project enables you to experiment/test/dev with CUDA and then move your project(s) to Frontier/ROCm.
 
@@ -86,6 +86,8 @@ PARTITION AVAIL  TIMELIMIT  NODES  STATE NODELIST
 batch*       up    2:00:00      2   idle c[1-2]
 batch-dev    up   infinite      2   idle c[1-2]
 ```
+
+You will note there are two partitions available. The default partition `batch` has the Frontier default time limit of 2 hours. There is also a `batch-dev` partition for debugging workloads you can't get to run within two hours on your system (due to available compute resources, GPU sharing, etc).
 
 ## Submitting Jobs
 
@@ -188,7 +190,7 @@ GPU  Temp (DieEdge)  AvgPwr  SCLK    MCLK     Fan  Perf  PwrCap  VRAM%  GPU%
 
 You can see from these examples that each compute node (c1-c2) share and have access to available host GPUs.
 
-NOTE: Because the GPUs are shared on compute nodes you will have to adjust batch size, etc for available VRAM.
+NOTE: Because the GPUs are shared on compute nodes you will likely have to adjust batch size, etc for available VRAM.
 
 ## Stopping and Restarting the Cluster
 
