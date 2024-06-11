@@ -43,6 +43,9 @@ services:
     ulimits:
       memlock: -1
       stack: 67108864
+    cap_add:
+      - SYS_PTRACE
+      - SYS_NICE
     expose:
       - "6817"
     depends_on:
@@ -66,6 +69,9 @@ services:
     ulimits:
       memlock: -1
       stack: 67108864
+    cap_add:
+      - SYS_PTRACE
+      - SYS_NICE
     expose:
       - "6818"
     depends_on:
@@ -89,6 +95,9 @@ services:
     ulimits:
       memlock: -1
       stack: 67108864
+    cap_add:
+      - SYS_PTRACE
+      - SYS_NICE
     expose:
       - "6818"
     depends_on:
