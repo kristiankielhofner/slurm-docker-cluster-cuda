@@ -99,14 +99,14 @@ RUN wget -O Miniforge3.sh \
 
 RUN cp /app/conda/etc/profile.d/conda.sh /etc/profile.d
 
-COPY configs/slurm.conf /etc/slurm/slurm.conf
-COPY configs/slurmdbd.conf /etc/slurm/slurmdbd.conf
-COPY configs/cgroup.conf /etc/slurm/cgroup.conf
+COPY .config/slurm.conf /etc/slurm/slurm.conf
+COPY .config/slurmdbd.conf /etc/slurm/slurmdbd.conf
+COPY .config/cgroup.conf /etc/slurm/cgroup.conf
 
 RUN chown slurm:slurm /etc/slurm/slurmdbd.conf \
     && chmod 600 /etc/slurm/slurmdbd.conf
 
-COPY docker-entrypoint.sh /docker-entrypoint.sh
+COPY misc/docker-entrypoint.sh /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 # Put us somewhere other than /

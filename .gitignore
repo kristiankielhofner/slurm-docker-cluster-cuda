@@ -1,4 +1,5 @@
 .env
 .cache
+.config
 work
 data

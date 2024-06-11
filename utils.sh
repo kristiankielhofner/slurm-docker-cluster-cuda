@@ -75,21 +75,22 @@ get_num_gpus() {
 }
 
 gen_config() {
-    cp *.conf configs/
+    mkdir -p .config
+    cp config/* .config/
 
     if [ $GPU_COUNT = 0 ]; then
-        echo "NodeName=c[1-2] RealMemory=${AVAIL_MEM} CPUs=${CPU_COUNT} State=UNKNOWN" >> configs/slurm.conf
+        echo "NodeName=c[1-2] RealMemory=${AVAIL_MEM} CPUs=${CPU_COUNT} State=UNKNOWN" >> .config/slurm.conf
     else
         if [ "$GPU" = "rocm" ]; then
-            echo "# AMD" > configs/gres.conf
-            echo "AutoDetect=rsmi" >> configs/gres.conf
+            AUTO_DETECT="rsmi"
         fi
         if [ "$GPU" = "cuda" ]; then
-            echo "# Nvidia" > configs/gres.conf
-            echo "AutoDetect=nvml" >> configs/gres.conf
+            AUTO_DETECT="nvml"
         fi
-        echo "GresTypes=gpu" >> configs/slurm.conf
-        echo "NodeName=c[1-2] RealMemory=${AVAIL_MEM} CPUs=${CPU_COUNT} Gres=gpu:${GPU_COUNT} State=UNKNOWN" >> configs/slurm.conf
+        echo "AutoDetect=$AUTO_DETECT" > .config/gres.conf
+        echo "GresTypes=gpu" >> .config/slurm.conf
+        echo "NodeName=c[1-2] RealMemory=${AVAIL_MEM} CPUs=${CPU_COUNT} Gres=gpu:${GPU_COUNT} State=UNKNOWN" \
+            >> .config/slurm.conf
     fi
 }
 
@@ -99,6 +100,7 @@ get_num_gpus
 
 case $1 in
 
+# Pass all build args so we can use same command for cuda/rocm/cpu
 build)
     gen_config
     docker build --build-arg SLURM_VER=${SLURM_VER} --build-arg CUDA_VER=${CUDA_VER} \
@@ -109,7 +111,7 @@ build)
 clean)
     # Allow these commands to fail
     set +e
-    rm -f configs/*
+    rm -rf .config
     docker compose -f docker-compose-${GPU}.yml stop
     docker compose -f docker-compose-${GPU}.yml down
     docker compose -f docker-compose-${GPU}.yml rm -f
@@ -131,6 +133,7 @@ ctl)
 # In this configuration jobs need to be submitted via the control node/container
 run)
     shift
+    echo "Running '$@' on control node..."
     docker compose -f docker-compose-${GPU}.yml exec -it slurmctld "$@"
 ;;
 
@@ -143,7 +146,7 @@ c*)
 register)
     docker compose -f docker-compose-${GPU}.yml exec \
         slurmctld bash -c "/usr/bin/sacctmgr --immediate add cluster name=linux" && \
-    docker compose -f docker-compose-${GPU}.yml restart slurmdbd slurmctld
+        docker compose -f docker-compose-${GPU}.yml restart slurmdbd slurmctld
 ;;
 
 # Shell in a fresh base image
