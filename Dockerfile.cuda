@@ -61,10 +61,12 @@ RUN wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/downloa
     && chmod +x /usr/local/bin/gosu \
     && gosu nobody true
 
+RUN ln -s /usr/lib64/libnvidia-ml.so.1 /usr/lib64/libnvidia-ml.so
+
 RUN git clone -b ${SLURM_TAG} --single-branch --depth=1 https://github.com/SchedMD/slurm.git \
     && pushd slurm \
     && ./configure --enable-debug --prefix=/usr --sysconfdir=/etc/slurm \
-        --with-mysql_config=/usr/bin --libdir=/usr/lib64 --with-nvml=/usr/local/cuda \
+        --with-mysql_config=/usr/bin --libdir=/usr/lib64 --with-nvml=/usr/local/cuda/targets/x86_64-linux \
     && make install \
     && install -D -m644 etc/cgroup.conf.example /etc/slurm/cgroup.conf.example \
     && install -D -m644 etc/slurm.conf.example /etc/slurm/slurm.conf.example \
@@ -102,7 +104,7 @@ RUN cp /app/conda/etc/profile.d/conda.sh /etc/profile.d
 COPY configs/slurm.conf /etc/slurm/slurm.conf
 COPY configs/slurmdbd.conf /etc/slurm/slurmdbd.conf
 COPY configs/gres.conf /etc/slurm/gres.conf
-#COPY cgroup.conf /etc/slurm/cgroup.conf
+COPY configs/cgroup.conf /etc/slurm/cgroup.conf
 
 RUN chown slurm:slurm /etc/slurm/slurmdbd.conf \
     && chmod 600 /etc/slurm/slurmdbd.conf

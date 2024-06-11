@@ -123,7 +123,7 @@ RUN cp /app/conda/etc/profile.d/conda.sh /etc/profile.d
 COPY configs/slurm.conf /etc/slurm/slurm.conf
 COPY configs/slurmdbd.conf /etc/slurm/slurmdbd.conf
 COPY configs/gres.conf /etc/slurm/gres.conf
-#COPY cgroup.conf /etc/slurm/cgroup.conf
+COPY configs/cgroup.conf /etc/slurm/cgroup.conf
 
 RUN chown slurm:slurm /etc/slurm/slurmdbd.conf \
     && chmod 600 /etc/slurm/slurmdbd.conf

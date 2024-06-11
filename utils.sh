@@ -17,8 +17,7 @@ ROCM_VER=${ROCM_VER:-5.7.1}
 CONDA_PATH=${CONDA_PATH:-/local/mgpu/conda}
 PYTHON_VER=${PYTHON_VER:-3.10}
 
-#SLURM_TAG=${SLURM_TAG:-slurm-23-02-7-1} #Frontier ver - WIP
-SLURM_TAG=${SLURM_TAG:-slurm-21-08-6-1}
+SLURM_TAG=${SLURM_TAG:-slurm-23-02-7-1} # Frontier ver
 
 IMAGE=${IMAGE:-slurm-docker-cluster-gpu}
 IMAGE_TAG=${IMAGE_TAG:-21.08}
@@ -77,12 +76,9 @@ gen_config() {
             echo "# AMD" > configs/gres.conf
             echo "AutoDetect=rsmi" >> configs/gres.conf
         fi
-        # TODO: Support NVML...
         if [ "$GPU" = "cuda" ]; then
             echo "# Nvidia" > configs/gres.conf
-            for i in $(ls /dev/nvidia[0-7]); do
-                echo "Name=gpu File=$i" >> configs/gres.conf
-            done
+            echo "AutoDetect=nvml" >> configs/gres.conf
         fi
         echo "GresTypes=gpu" >> configs/slurm.conf
         echo "NodeName=c[1-2] RealMemory=${AVAIL_MEM} CPUs=${CPU_COUNT} Gres=gpu:${GPU_COUNT} State=UNKNOWN" >> configs/slurm.conf
