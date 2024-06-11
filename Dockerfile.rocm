@@ -1,6 +1,10 @@
 ARG ROCM_VER=5.7.1
-ARG ROCKY_VER=9
+
 ARG GPU=rocm
+ARG ROCKY_VER=9
+ARG SLURM_VER=23.02.7
+ARG GOSU_VERSION=1.17
+ARG MINICONDA_VER=23.11.0-0
 
 FROM rockylinux:${ROCKY_VER}
 
@@ -10,12 +14,12 @@ LABEL org.opencontainers.image.source="https://github.com/kristiankielhofner/slu
       org.label-schema.docker.cmd="docker compose up -d" \
       maintainer="Kristian Kielhofner"
 
-ARG SLURM_TAG=slurm-21-08-6-1
-ARG GOSU_VERSION=1.17
-ARG MINICONDA_VER=23.11.0-0 # Version on Frontier as of 5/14/2024
-ARG GPU
-ARG ROCKY_VER
 ARG ROCM_VER
+
+ARG GPU
+ARG SLURM_VER
+ARG GOSU_VERSION
+ARG MINICONDA_VER
 
 RUN --mount=type=cache,target=/var/cache/dnf dnf makecache \
     && dnf -y update \
@@ -82,8 +86,9 @@ RUN wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/downloa
     && chmod +x /usr/local/bin/gosu \
     && gosu nobody true
 
-RUN git clone -b ${SLURM_TAG} --single-branch --depth=1 https://github.com/SchedMD/slurm.git \
-    && pushd slurm \
+RUN wget -O slurm-${SLURM_VER}.tar.bz2 https://download.schedmd.com/slurm/slurm-${SLURM_VER}.tar.bz2 \
+    && tar xvf slurm-${SLURM_VER}.tar.bz2 \
+    && pushd slurm-${SLURM_VER} \
     && ./configure --enable-debug --prefix=/usr --sysconfdir=/etc/slurm \
         --with-mysql_config=/usr/bin --libdir=/usr/lib64 \
     && make install \
@@ -92,7 +97,7 @@ RUN git clone -b ${SLURM_TAG} --single-branch --depth=1 https://github.com/Sched
     && install -D -m644 etc/slurmdbd.conf.example /etc/slurm/slurmdbd.conf.example \
     && install -D -m644 contribs/slurm_completion_help/slurm_completion.sh /etc/profile.d/slurm_completion.sh \
     && popd \
-    && rm -rf slurm \
+    && rm -rf slurm-${SLURM_VER} slurm-${SLURM_VER}.tar.bz2 \
     && groupadd -r --gid=990 slurm \
     && useradd -r -g slurm --uid=990 slurm \
     && mkdir /etc/sysconfig/slurm \
@@ -128,8 +133,8 @@ COPY configs/cgroup.conf /etc/slurm/cgroup.conf
 RUN chown slurm:slurm /etc/slurm/slurmdbd.conf \
     && chmod 600 /etc/slurm/slurmdbd.conf
 
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
 # Put us somewhere other than /
 WORKDIR /local

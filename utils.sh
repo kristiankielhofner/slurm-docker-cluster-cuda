@@ -1,11 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
 # Figure out where we really are
 OUR_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "$OUR_DIR"
 
-if [ -r .env ]; then
+if [ -s .env ]; then
     echo "Using .env for configuration"
     . .env
 fi
@@ -15,12 +15,12 @@ CUDA_VER=${CUDA_VER:-12.1.0}
 ROCM_VER=${ROCM_VER:-5.7.1}
 
 CONDA_PATH=${CONDA_PATH:-/local/mgpu/conda}
+MINICONDA_VER=${MINICONDA_VER:-23.11.0-0} # Version on Frontier as of 6/10/2024
 PYTHON_VER=${PYTHON_VER:-3.10}
 
-SLURM_TAG=${SLURM_TAG:-slurm-23-02-7-1} # Frontier ver
-
+SLURM_VER=${SLURM_VER:-23.02.7} # Version on Frontier as of 6/10/2024
 IMAGE=${IMAGE:-slurm-docker-cluster-gpu}
-IMAGE_TAG=${IMAGE_TAG:-21.08}
+IMAGE_TAG=${IMAGE_TAG:-${SLURM_VER}}
 
 detect_hw() {
     # Default to no GPU (cpu)
@@ -96,10 +96,9 @@ case $1 in
 
 build)
     gen_config
-    docker build --progress=plain --build-arg SLURM_TAG=${SLURM_TAG} --build-arg CUDA_VER=${CUDA_VER} \
-        --build-arg ROCM_VER=${ROCM_VER} --build-arg GPU=${GPU} \
+    docker build --build-arg SLURM_VER=${SLURM_VER} --build-arg CUDA_VER=${CUDA_VER} \
+        --build-arg ROCM_VER=${ROCM_VER} --build-arg GPU=${GPU} --build-arg MINICONDA_VER=${MINICONDA_VER} \
         -f Dockerfile.${GPU} -t ${IMAGE}:${IMAGE_TAG} .
-
 ;;
 
 conda-mgpu)
@@ -114,7 +113,7 @@ clean)
     docker compose -f docker-compose-${GPU}.yml down
     docker compose -f docker-compose-${GPU}.yml rm -f
     docker volume rm slurm-docker-cluster-gpu_etc_munge slurm-docker-cluster-gpu_etc_slurm  \
-        slurm-docker-cluster-gpu_var_lib_mysql slurm-docker-cluster-gpu_var_log_slurm
+        slurm-docker-cluster-gpu_var_lib_mysql slurm-docker-cluster-gpu_var_log_slurm slurm-docker-cluster-gpu_slurm_jobdir
 ;;
 
 config)
