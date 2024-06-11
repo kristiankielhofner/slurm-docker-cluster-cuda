@@ -1,6 +1,6 @@
 services:
   mysql:
-    image: mariadb:${MARIADB_TAG:-10.10}
+    image: mariadb:${MARIADB_TAG:-10.11.8}
     hostname: mysql
     container_name: mysql
     environment:
