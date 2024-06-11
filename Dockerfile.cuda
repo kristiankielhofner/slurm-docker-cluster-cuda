@@ -1,4 +1,4 @@
-ARG CUDA_VER=12.1.0
+ARG CUDA_BASE_TAG=12.1.0-cudnn8-devel
 
 ARG GPU=cuda
 ARG ROCKY_VER=9
@@ -6,7 +6,7 @@ ARG SLURM_VER=23.02.7
 ARG GOSU_VERSION=1.17
 ARG MINICONDA_VER=23.11.0-0
 
-FROM nvidia/cuda:${CUDA_VER}-cudnn8-devel-rockylinux${ROCKY_VER}
+FROM nvidia/cuda:${CUDA_BASE_TAG}-rockylinux${ROCKY_VER}
 
 LABEL org.opencontainers.image.source="https://github.com/kristiankielhofner/slurm-docker-cluster-gpu" \
       org.opencontainers.image.title="slurm-docker-cluster-gpu" \
@@ -14,13 +14,15 @@ LABEL org.opencontainers.image.source="https://github.com/kristiankielhofner/slu
       org.label-schema.docker.cmd="docker compose up -d" \
       maintainer="Kristian Kielhofner"
 
-ARG CUDA_VER
+ARG CUDA_BASE_TAG
 
 ARG GPU
 ARG ROCKY_VER
 ARG SLURM_VER
 ARG GOSU_VERSION
 ARG MINICONDA_VER
+
+WORKDIR /code
 
 RUN --mount=type=cache,target=/var/cache/dnf dnf makecache \
     && dnf -y update \
@@ -50,13 +52,12 @@ RUN --mount=type=cache,target=/var/cache/dnf dnf makecache \
         json-c-devel \
         libaio-devel \
         procps-ng \
-        htop \
-       && dnf clean all
+        htop
 
 # Set in environment
-ENV CUDA_VER=${CUDA_VER}
+ENV CUDA_BASE_TAG=${CUDA_BASE_TAG}
 
-RUN pip3 install Cython nose
+RUN --mount=type=cache,target=/root/.cache/pip pip3 install Cython nose
 
 RUN wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-amd64" \
     && wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-amd64.asc" \
@@ -70,8 +71,10 @@ RUN wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/downloa
 # Fix for NVML
 RUN ln -s /usr/lib64/libnvidia-ml.so.1 /usr/lib64/libnvidia-ml.so
 
-RUN wget -O slurm-${SLURM_VER}.tar.bz2 https://download.schedmd.com/slurm/slurm-${SLURM_VER}.tar.bz2 \
-    && tar xvf slurm-${SLURM_VER}.tar.bz2 \
+RUN --mount=type=cache,target=/code \
+    wget -c -O slurm-${SLURM_VER}.tar.bz2 https://download.schedmd.com/slurm/slurm-${SLURM_VER}.tar.bz2
+
+RUN --mount=type=cache,target=/code tar xvf slurm-${SLURM_VER}.tar.bz2 \
     && pushd slurm-${SLURM_VER} \
     && ./configure --enable-debug --prefix=/usr --sysconfdir=/etc/slurm \
         --with-mysql_config=/usr/bin --libdir=/usr/lib64 --with-nvml=/usr/local/cuda/targets/x86_64-linux \
@@ -81,7 +84,7 @@ RUN wget -O slurm-${SLURM_VER}.tar.bz2 https://download.schedmd.com/slurm/slurm-
     && install -D -m644 etc/slurmdbd.conf.example /etc/slurm/slurmdbd.conf.example \
     && install -D -m644 contribs/slurm_completion_help/slurm_completion.sh /etc/profile.d/slurm_completion.sh \
     && popd \
-    && rm -rf slurm-${SLURM_VER} slurm-${SLURM_VER}.tar.bz2 \
+    && rm -rf slurm-${SLURM_VER} \
     && groupadd -r --gid=990 slurm \
     && useradd -r -g slurm --uid=990 slurm \
     && mkdir /etc/sysconfig/slurm \
@@ -105,9 +108,9 @@ RUN wget -O slurm-${SLURM_VER}.tar.bz2 https://download.schedmd.com/slurm/slurm-
 
 RUN wget -O Miniforge3.sh \
     https://github.com/conda-forge/miniforge/releases/download/${MINICONDA_VER}/Miniforge3-${MINICONDA_VER}-Linux-x86_64.sh && \
-    bash Miniforge3.sh -b -p "/app/conda" && rm Miniforge3.sh
+    bash Miniforge3.sh -b -p "/opt/conda" && rm Miniforge3.sh
 
-RUN cp /app/conda/etc/profile.d/conda.sh /etc/profile.d
+RUN cp /opt/conda/etc/profile.d/conda.sh /etc/profile.d
 
 COPY .config/slurm.conf /etc/slurm/slurm.conf
 COPY .config/slurmdbd.conf /etc/slurm/slurmdbd.conf

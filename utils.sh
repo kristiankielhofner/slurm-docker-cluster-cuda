@@ -23,6 +23,7 @@ CPU_COUNT=${CPU_COUNT:-$(nproc)} # Use number of host CPUs by default
 
 # Used during docker build
 CUDA_VER=${CUDA_VER:-12.1.0}
+ROCKY_VER=${ROCKY_VER:-9}
 ROCM_VER=${ROCM_VER:-5.7.1}
 
 MINICONDA_VER=${MINICONDA_VER:-23.11.0-0} # Version on Frontier as of 6/10/2024
@@ -31,6 +32,27 @@ SLURM_VER=${SLURM_VER:-23.02.7} # Version on Frontier as of 6/10/2024
 # Docker image configuration
 IMAGE=${IMAGE:-slurm-docker-cluster-gpu}
 IMAGE_TAG=${IMAGE_TAG:-${SLURM_VER}}
+
+# Nvidia has inconsistent docker tagging with cudnn
+# Attempt to figure out correct docker base image based on CUDA ver
+handle_cuda_tags() {
+    case $CUDA_VER in
+
+        12.1*|12.2*)
+            CUDA_BASE_TAG="$CUDA_VER-cudnn8-devel"
+        ;;
+
+        12.3*)
+            CUDA_BASE_TAG="$CUDA_VER-cudnn9-devel"
+        ;;
+
+        # Can only test 12.4 or later from here
+        *)
+            CUDA_BASE_TAG="$CUDA_VER-cudnn-devel"
+        ;;
+
+    esac
+}
 
 detect_hw() {
     # Default to no GPU (cpu)
@@ -102,9 +124,11 @@ case $1 in
 
 # Pass all build args so we can use same command for cuda/rocm/cpu
 build)
+    handle_cuda_tags
     gen_config
-    docker build --build-arg SLURM_VER=${SLURM_VER} --build-arg CUDA_VER=${CUDA_VER} \
+    docker build --build-arg SLURM_VER=${SLURM_VER} --build-arg CUDA_BASE_TAG=${CUDA_BASE_TAG} \
         --build-arg ROCM_VER=${ROCM_VER} --build-arg GPU=${GPU} --build-arg MINICONDA_VER=${MINICONDA_VER} \
+        --build-arg ROCKY_VER=${ROCKY_VER} \
         -f Dockerfile.${GPU} -t ${IMAGE}:${IMAGE_TAG} .
 ;;
 

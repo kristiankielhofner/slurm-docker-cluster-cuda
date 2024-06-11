@@ -22,6 +22,8 @@ ARG SLURM_VER
 ARG GOSU_VERSION
 ARG MINICONDA_VER
 
+WORKDIR /code
+
 RUN --mount=type=cache,target=/var/cache/dnf dnf makecache \
     && dnf -y update \
     && dnf -y install dnf-plugins-core epel-release \
@@ -61,9 +63,7 @@ RUN echo "priority=50" >> /etc/yum.repos.d/rocm.repo
 RUN echo "gpgcheck=1" >> /etc/yum.repos.d/rocm.repo
 RUN echo "gpgkey=https://repo.radeon.com/rocm/rocm.gpg.key" >> /etc/yum.repos.d/rocm.repo
 
-RUN dnf clean all
-
-RUN dnf -y install rocm-utils rocm-smi rocm-smi-lib && dnf clean all
+RUN --mount=type=cache,target=/var/cache/dnf dnf -y install rocm-utils rocm-smi rocm-smi-lib
 
 RUN echo "/opt/rocm/lib" > /etc/ld.so.conf.d/rocm.conf
 RUN echo "/opt/rocm/lib64" >> /etc/ld.so.conf.d/rocm.conf
@@ -76,7 +76,7 @@ ENV ROCM_VER=${ROCM_VER}
 # Add path
 COPY misc/rocm.sh /etc/profile.d/99-rocm.sh
 
-RUN pip3 install Cython nose
+RUN --mount=type=cache,target=/root/.cache/pip pip3 install Cython nose
 
 RUN wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-amd64" \
     && wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-amd64.asc" \
@@ -87,8 +87,10 @@ RUN wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/downloa
     && chmod +x /usr/local/bin/gosu \
     && gosu nobody true
 
-RUN wget -O slurm-${SLURM_VER}.tar.bz2 https://download.schedmd.com/slurm/slurm-${SLURM_VER}.tar.bz2 \
-    && tar xvf slurm-${SLURM_VER}.tar.bz2 \
+RUN --mount=type=cache,target=/code \
+    wget -c -O slurm-${SLURM_VER}.tar.bz2 https://download.schedmd.com/slurm/slurm-${SLURM_VER}.tar.bz2
+
+RUN --mount=type=cache,target=/code tar xvf slurm-${SLURM_VER}.tar.bz2 \
     && pushd slurm-${SLURM_VER} \
     && ./configure --enable-debug --prefix=/usr --sysconfdir=/etc/slurm \
         --with-mysql_config=/usr/bin --libdir=/usr/lib64 \
@@ -98,7 +100,7 @@ RUN wget -O slurm-${SLURM_VER}.tar.bz2 https://download.schedmd.com/slurm/slurm-
     && install -D -m644 etc/slurmdbd.conf.example /etc/slurm/slurmdbd.conf.example \
     && install -D -m644 contribs/slurm_completion_help/slurm_completion.sh /etc/profile.d/slurm_completion.sh \
     && popd \
-    && rm -rf slurm-${SLURM_VER} slurm-${SLURM_VER}.tar.bz2 \
+    && rm -rf slurm-${SLURM_VER} \
     && groupadd -r --gid=990 slurm \
     && useradd -r -g slurm --uid=990 slurm \
     && mkdir /etc/sysconfig/slurm \
@@ -122,9 +124,9 @@ RUN wget -O slurm-${SLURM_VER}.tar.bz2 https://download.schedmd.com/slurm/slurm-
 
 RUN wget -O Miniforge3.sh \
     https://github.com/conda-forge/miniforge/releases/download/${MINICONDA_VER}/Miniforge3-${MINICONDA_VER}-Linux-x86_64.sh && \
-    bash Miniforge3.sh -b -p "/app/conda" && rm Miniforge3.sh
+    bash Miniforge3.sh -b -p "/opt/conda" && rm Miniforge3.sh
 
-RUN cp /app/conda/etc/profile.d/conda.sh /etc/profile.d
+RUN cp /opt/conda/etc/profile.d/conda.sh /etc/profile.d
 
 COPY .config/slurm.conf /etc/slurm/slurm.conf
 COPY .config/slurmdbd.conf /etc/slurm/slurmdbd.conf
