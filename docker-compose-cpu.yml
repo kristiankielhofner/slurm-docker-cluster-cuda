@@ -1,8 +1,8 @@
 services:
-  mysql:
+  mariadb:
     image: mariadb:${MARIADB_TAG:-10.11.8}
-    hostname: mysql
-    container_name: mysql
+    hostname: mariadb
+    container_name: mariadb
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
       MYSQL_DATABASE: slurm_acct_db
@@ -12,11 +12,7 @@ services:
       - var_lib_mysql:/var/lib/mysql
 
   slurmdbd:
-    image: ${IMAGE:-slurm-docker-cluster-gpu}:${IMAGE_TAG:-21.08}
-    build:
-      context: .
-      args:
-        SLURM_TAG: ${SLURM_TAG:-slurm-21-08-6-1}
+    image: ${IMAGE:-slurm-docker-cluster-gpu}:${IMAGE_TAG:-23.02.7}
     command: ["slurmdbd"]
     container_name: slurmdbd
     hostname: slurmdbd
@@ -27,20 +23,19 @@ services:
     expose:
       - "6819"
     depends_on:
-      - mysql
+      - mariadb
 
   slurmctld:
-    image: ${IMAGE:-slurm-docker-cluster-gpu}:${IMAGE_TAG:-21.08}
+    image: ${IMAGE:-slurm-docker-cluster-gpu}:${IMAGE_TAG:-23.02.7}
     command: ["slurmctld"]
     container_name: slurmctld
     hostname: slurmctld
     volumes:
       - etc_munge:/etc/munge
       - etc_slurm:/etc/slurm
-      - slurm_jobdir:/data
       - var_log_slurm:/var/log/slurm
-      - ./:/local
-      - ./cache:/root/.cache
+      - ${DATA_DIR:-./data}:/data
+      - ${CACHE_DIR:-./.cache}:/root/.cache
     env_file:
       - .env
     shm_size: 8gb
@@ -54,17 +49,16 @@ services:
       - "slurmdbd"
 
   c1:
-    image: ${IMAGE:-slurm-docker-cluster-gpu}:${IMAGE_TAG:-21.08}
+    image: ${IMAGE:-slurm-docker-cluster-gpu}:${IMAGE_TAG:-23.02.7}
     command: ["slurmd"]
     hostname: c1
     container_name: c1
     volumes:
       - etc_munge:/etc/munge
       - etc_slurm:/etc/slurm
-      - slurm_jobdir:/data
       - var_log_slurm:/var/log/slurm
-      - ./:/local
-      - ./cache:/root/.cache
+      - ${DATA_DIR:-./data}:/data
+      - ${CACHE_DIR:-./.cache}:/root/.cache
     env_file:
       - .env
     shm_size: 8gb
@@ -78,17 +72,16 @@ services:
       - "slurmctld"
 
   c2:
-    image: ${IMAGE:-slurm-docker-cluster-gpu}:${IMAGE_TAG:-21.08}
+    image: ${IMAGE:-slurm-docker-cluster-gpu}:${IMAGE_TAG:-23.02.7}
     command: ["slurmd"]
     hostname: c2
     container_name: c2
     volumes:
       - etc_munge:/etc/munge
       - etc_slurm:/etc/slurm
-      - slurm_jobdir:/data
       - var_log_slurm:/var/log/slurm
-      - ./:/local
-      - ./cache:/root/.cache
+      - ${DATA_DIR:-./data}:/data
+      - ${CACHE_DIR:-./.cache}:/root/.cache
     env_file:
       - .env
     shm_size: 8gb
@@ -104,6 +97,5 @@ services:
 volumes:
   etc_munge:
   etc_slurm:
-  slurm_jobdir:
   var_lib_mysql:
   var_log_slurm:

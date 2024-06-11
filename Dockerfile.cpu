@@ -8,7 +8,7 @@ FROM rockylinux:${ROCKY_VER}
 
 LABEL org.opencontainers.image.source="https://github.com/kristiankielhofner/slurm-docker-cluster-gpu" \
       org.opencontainers.image.title="slurm-docker-cluster-gpu" \
-      org.opencontainers.image.description="Slurm Docker cluster with GPU on Rocky Linux 9" \
+      org.opencontainers.image.description="Slurm Docker cluster with CPU on Rocky Linux 9" \
       org.label-schema.docker.cmd="docker compose up -d" \
       maintainer="Kristian Kielhofner"
 
@@ -110,6 +110,6 @@ COPY docker-entrypoint.sh /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 # Put us somewhere other than /
-WORKDIR /local
+WORKDIR /data
 
 CMD ["slurmdbd"]

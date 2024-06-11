@@ -29,7 +29,9 @@ fi
 
 if [ -x /opt/rocm-${ROCM_VER}/bin/rocm-smi ]; then
     echo "---> rocm-smi"
-    rocm-smi || true
+    /opt/rocm-${ROCM_VER}/bin/rocm-smi || true
+elif [ -x /opt/rocm-${ROCM_VER}/bin/rocm-smi ]; then
+    /opt/rocm/bin/rocm-smi || true
 fi
 
 if [ "$1" = "slurmctld" ]
