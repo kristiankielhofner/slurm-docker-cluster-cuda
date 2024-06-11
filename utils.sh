@@ -128,7 +128,7 @@ build)
     gen_config
     docker build --build-arg SLURM_VER=${SLURM_VER} --build-arg CUDA_BASE_TAG=${CUDA_BASE_TAG} \
         --build-arg ROCM_VER=${ROCM_VER} --build-arg GPU=${GPU} --build-arg MINICONDA_VER=${MINICONDA_VER} \
-        --build-arg ROCKY_VER=${ROCKY_VER} \
+        --build-arg ROCKY_VER=${ROCKY_VER} --build-arg CUDA_VER=${CUDA_VER} \
         -f Dockerfile.${GPU} -t ${IMAGE}:${IMAGE_TAG} .
 ;;
 
