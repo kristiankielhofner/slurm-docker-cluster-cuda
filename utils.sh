@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+set -a
 
 # Figure out where we really are
 OUR_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
