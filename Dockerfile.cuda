@@ -94,7 +94,7 @@ RUN --mount=type=cache,target=/code tar xvf slurm-${SLURM_VER}.tar.bz2 \
     && pushd slurm-${SLURM_VER} \
     && ./configure --enable-debug --prefix=/usr --sysconfdir=/etc/slurm \
         --with-mysql_config=/usr/bin --libdir=/usr/lib64 --with-nvml=/usr/local/cuda/targets/x86_64-linux \
-    && make install \
+    && make -j $(nproc) install \
     && install -D -m644 etc/cgroup.conf.example /etc/slurm/cgroup.conf.example \
     && install -D -m644 etc/slurm.conf.example /etc/slurm/slurm.conf.example \
     && install -D -m644 etc/slurmdbd.conf.example /etc/slurm/slurmdbd.conf.example \
@@ -124,7 +124,7 @@ RUN --mount=type=cache,target=/code tar xvf slurm-${SLURM_VER}.tar.bz2 \
 
 RUN --mount=type=cache,target=/code wget -c -O Miniforge3.sh \
     https://github.com/conda-forge/miniforge/releases/download/${MINICONDA_VER}/Miniforge3-${MINICONDA_VER}-Linux-x86_64.sh && \
-    bash Miniforge3.sh -b -p "/opt/conda" && rm Miniforge3.sh
+    bash Miniforge3.sh -b -p "/opt/conda"
 
 RUN cp /opt/conda/etc/profile.d/conda.sh /etc/profile.d
 
