@@ -17,6 +17,7 @@ LABEL org.opencontainers.image.source="https://github.com/kristiankielhofner/slu
 ARG ROCM_VER
 
 ARG GPU
+ARG ROCKY_VER
 ARG SLURM_VER
 ARG GOSU_VERSION
 ARG MINICONDA_VER
