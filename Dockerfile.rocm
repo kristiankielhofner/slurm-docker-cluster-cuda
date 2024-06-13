@@ -67,6 +67,10 @@ RUN --mount=type=cache,target=/var/cache/dnf dnf makecache \
         numactl \
         numatop
 
+# For some strange reason rocky doesn't add /usr/lib paths to ld
+RUN echo "/usr/lib" > /etc/ld.so.conf.d/usr-lib.conf
+RUN echo "/usr/lib64" >> /etc/ld.so.conf.d/usr-lib.conf
+
 # Add ROCm repo
 RUN echo "[ROCm-${ROCM_VER}]" > /etc/yum.repos.d/rocm.repo
 RUN echo "name=ROCm${ROCM_VER}" >> /etc/yum.repos.d/rocm.repo
@@ -76,7 +80,9 @@ RUN echo "priority=50" >> /etc/yum.repos.d/rocm.repo
 RUN echo "gpgcheck=1" >> /etc/yum.repos.d/rocm.repo
 RUN echo "gpgkey=https://repo.radeon.com/rocm/rocm.gpg.key" >> /etc/yum.repos.d/rocm.repo
 
-RUN --mount=type=cache,target=/var/cache/dnf dnf -y install rocm-utils rocm-smi rocm-smi-lib
+# Install enough deps to at least build flash-attention
+RUN --mount=type=cache,target=/var/cache/dnf dnf -y install rocm-utils rocm-smi rocm-smi-lib hipcc rocm-device-libs \
+    rocthrust-devel hipsparse-devel hipblas-devel
 
 RUN echo "/opt/rocm/lib" > /etc/ld.so.conf.d/rocm.conf
 RUN echo "/opt/rocm/lib64" >> /etc/ld.so.conf.d/rocm.conf

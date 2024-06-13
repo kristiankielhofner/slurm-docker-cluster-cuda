@@ -63,6 +63,10 @@ RUN --mount=type=cache,target=/var/cache/dnf dnf makecache \
         numactl \
         numatop
 
+# For some strange reason rocky doesn't add /usr/lib paths to ld
+RUN echo "/usr/lib" > /etc/ld.so.conf.d/usr-lib.conf
+RUN echo "/usr/lib64" >> /etc/ld.so.conf.d/usr-lib.conf
+
 RUN --mount=type=cache,target=/root/.cache/pip pip3 install Cython nose
 
 RUN wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-amd64" \

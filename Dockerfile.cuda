@@ -69,6 +69,10 @@ RUN --mount=type=cache,target=/var/cache/dnf dnf makecache \
         numactl \
         numatop
 
+# For some strange reason rocky doesn't add /usr/lib paths to ld
+RUN echo "/usr/lib" > /etc/ld.so.conf.d/usr-lib.conf
+RUN echo "/usr/lib64" >> /etc/ld.so.conf.d/usr-lib.conf
+
 # Set in environment
 ENV CUDA_BASE_TAG=${CUDA_BASE_TAG}
 ENV CUDA_VER=${CUDA_VER}
