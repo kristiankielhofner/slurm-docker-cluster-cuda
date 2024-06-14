@@ -33,6 +33,9 @@ SLURM_VER=${SLURM_VER:-23.02.7} # Version on Frontier as of 6/10/2024
 IMAGE=${IMAGE:-slurm-docker-cluster-gpu}
 IMAGE_TAG=${IMAGE_TAG:-${SLURM_VER}}
 
+# Root home directory
+ROOT_HOME=${ROOT_HOME:-.root_home}
+
 # Nvidia has inconsistent docker tagging with cudnn
 # Attempt to figure out correct docker base image based on CUDA ver
 handle_cuda_tags() {
@@ -130,6 +133,13 @@ build)
         --build-arg ROCM_VER=${ROCM_VER} --build-arg GPU=${GPU} --build-arg MINICONDA_VER=${MINICONDA_VER} \
         --build-arg ROCKY_VER=${ROCKY_VER} --build-arg CUDA_VER=${CUDA_VER} \
         -f Dockerfile.${GPU} -t ${IMAGE}:${IMAGE_TAG} .
+    if [ ! -d ${ROOT_HOME} ]; then
+        echo "Initializing local root home directory - sudo/root on host machine required"
+        echo "This is only required one time"
+        cp -a misc/root_home ${ROOT_HOME}
+        sudo chown -R root:root ${ROOT_HOME}
+        sudo chmod -R 700 ${ROOT_HOME} # This is all really annoying
+    fi
 ;;
 
 clean)

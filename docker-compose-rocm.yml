@@ -34,8 +34,7 @@ services:
       - etc_munge:/etc/munge
       - etc_slurm:/etc/slurm
       - var_log_slurm:/var/log/slurm
-      - ${DATA_DIR:-./data}:/data
-      - ${CACHE_DIR:-./.cache}:/root/.cache
+      - ${ROOT_HOME:-./.root_home}:/root
     env_file:
       - .env
     shm_size: 8gb
@@ -65,8 +64,7 @@ services:
       - etc_munge:/etc/munge
       - etc_slurm:/etc/slurm
       - var_log_slurm:/var/log/slurm
-      - ${DATA_DIR:-./data}:/data
-      - ${CACHE_DIR:-./.cache}:/root/.cache
+      - ${ROOT_HOME:-./.root_home}:/root
     env_file:
       - .env
     shm_size: 8gb
@@ -96,8 +94,7 @@ services:
       - etc_munge:/etc/munge
       - etc_slurm:/etc/slurm
       - var_log_slurm:/var/log/slurm
-      - ${DATA_DIR:-./data}:/data
-      - ${CACHE_DIR:-./.cache}:/root/.cache
+      - ${ROOT_HOME:-./.root_home}:/root
     env_file:
       - .env
     shm_size: 8gb

@@ -146,6 +146,6 @@ COPY misc/docker-entrypoint.sh /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 # Put us somewhere other than /
-WORKDIR /data
+WORKDIR /root
 
 CMD ["slurmdbd"]
