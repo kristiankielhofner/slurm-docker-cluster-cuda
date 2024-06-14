@@ -34,7 +34,11 @@ IMAGE=${IMAGE:-slurm-docker-cluster-gpu}
 IMAGE_TAG=${IMAGE_TAG:-${SLURM_VER}}
 
 # Root home directory
-ROOT_HOME=${ROOT_HOME:-.root_home}
+ROOT_HOME=${ROOT_HOME:-.storage/root}
+
+# System specific storage paths
+CCS=${CCS:-.storage/ccs}
+LUSTRE=${LUSTRE:-.storage/lustre}
 
 # Nvidia has inconsistent docker tagging with cudnn
 # Attempt to figure out correct docker base image based on CUDA ver

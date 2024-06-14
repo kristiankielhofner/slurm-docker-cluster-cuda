@@ -34,7 +34,9 @@ services:
       - etc_munge:/etc/munge
       - etc_slurm:/etc/slurm
       - var_log_slurm:/var/log/slurm
-      - ${ROOT_HOME:-./.root_home}:/root
+      - ${ROOT_HOME:-./.storage/root}:/root
+      - ${CCS:-./.storage/ccs}:/ccs
+      - ${LUSTRE:-./.storage/lustre}:/lustre
     env_file:
       - .env
     shm_size: 8gb
@@ -65,7 +67,9 @@ services:
       - etc_munge:/etc/munge
       - etc_slurm:/etc/slurm
       - var_log_slurm:/var/log/slurm
-      - ${ROOT_HOME:-./.root_home}:/root
+      - ${ROOT_HOME:-./.storage/root}:/root
+      - ${CCS:-./.storage/ccs}:/ccs
+      - ${LUSTRE:-./.storage/lustre}:/lustre
     env_file:
       - .env
     shm_size: 8gb
@@ -96,7 +100,9 @@ services:
       - etc_munge:/etc/munge
       - etc_slurm:/etc/slurm
       - var_log_slurm:/var/log/slurm
-      - ${ROOT_HOME:-./.root_home}:/root
+      - ${ROOT_HOME:-./.storage/root}:/root
+      - ${CCS:-./.storage/ccs}:/ccs
+      - ${LUSTRE:-./.storage/lustre}:/lustre
     env_file:
       - .env
     shm_size: 8gb

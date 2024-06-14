@@ -1,4 +1,4 @@
 .env
-.root_home
 .config
+.storage
 work

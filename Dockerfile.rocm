@@ -93,7 +93,8 @@ RUN ldconfig
 ENV ROCM_VER=${ROCM_VER}
 
 # Add path
-COPY misc/rocm.sh /etc/profile.d/99-rocm.sh
+# Submitting slurm jobs with --export=NONE leads to this workaround
+COPY misc/rocm.sh /etc/profile.d/rocm.sh
 
 RUN --mount=type=cache,target=/root/.cache/pip pip3 install Cython nose
 
