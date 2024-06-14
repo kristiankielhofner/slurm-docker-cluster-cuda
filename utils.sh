@@ -144,6 +144,12 @@ build)
         mkdir -p ${STORAGE}
         cp -a misc/root_home ${ROOT_HOME}
     fi
+    detect_hw
+    if [ ${GPU} != "rocm" ]; then
+        cd ${ROOT_HOME}/bin
+        ln -s wrapper rocminfo
+        ln -s wrapper rocm-smi
+    fi
 ;;
 
 clean)
