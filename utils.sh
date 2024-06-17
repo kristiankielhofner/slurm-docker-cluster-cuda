@@ -147,8 +147,8 @@ build)
     detect_hw
     if [ ${GPU} != "rocm" ]; then
         cd ${ROOT_HOME}/bin
-        ln -s wrapper rocminfo
-        ln -s wrapper rocm-smi
+        ln -sf wrapper rocminfo
+        ln -sf wrapper rocm-smi
     fi
 ;;
 
