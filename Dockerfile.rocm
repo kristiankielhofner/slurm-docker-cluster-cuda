@@ -65,11 +65,23 @@ RUN --mount=type=cache,target=/var/cache/dnf dnf makecache \
         librdkafka-devel \
         numactl-devel \
         numactl \
-        numatop
+        numatop \
+        mpich-devel \
+        libfabric-devel \
+        autoconf \
+        automake \
+        libtool \
+        hwloc-devel
 
 # For some strange reason rocky doesn't add /usr/lib paths to ld
 RUN echo "/usr/lib" > /etc/ld.so.conf.d/usr-lib.conf
 RUN echo "/usr/lib64" >> /etc/ld.so.conf.d/usr-lib.conf
+
+# Remove lmod fromn shell
+RUN rm /etc/profile.d/modules.sh
+
+# Add symlink for aws-ofi-rccl/nccl plugin
+RUN ln -s /usr/include/mpich-x86_64 /usr/include/mpich-x86_64/include
 
 # Add ROCm repo
 RUN echo "[ROCm-${ROCM_VER}]" > /etc/yum.repos.d/rocm.repo
@@ -82,7 +94,7 @@ RUN echo "gpgkey=https://repo.radeon.com/rocm/rocm.gpg.key" >> /etc/yum.repos.d/
 
 # Install enough deps to at least build flash-attention
 RUN --mount=type=cache,target=/var/cache/dnf dnf -y install rocm-utils rocm-smi rocm-smi-lib hipcc rocm-device-libs \
-    rocthrust-devel hipsparse-devel hipblas-devel
+    rocthrust-devel hipsparse-devel hipblas-devel rccl-devel
 
 RUN echo "/opt/rocm/lib" > /etc/ld.so.conf.d/rocm.conf
 RUN echo "/opt/rocm/lib64" >> /etc/ld.so.conf.d/rocm.conf
