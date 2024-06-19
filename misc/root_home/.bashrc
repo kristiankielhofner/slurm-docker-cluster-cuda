@@ -21,3 +21,6 @@ export PATH
 #alias rm='rm -i'
 #alias cp='cp -i'
 #alias mv='mv -i'
+
+# This isn't set, for some reason...
+export USER=root
